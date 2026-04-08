@@ -1,0 +1,12 @@
+{
+  "name": "carbon-footprint-calculator",
+  "version": "1.0.0",
+  "description": "A simple carbon footprint calculator with AI tips",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npx http-server . -p 3000 -o"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
