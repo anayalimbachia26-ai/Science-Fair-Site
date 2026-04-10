@@ -442,7 +442,7 @@
 
     <script>
         const GLOBAL_AVERAGE = 4.0;
-        const GROQ_API_KEY = "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"; // Replace with your Groq API key
+        const GROQ_API_KEY = localStorage.getItem('groqApiKey') || ""; // Load from localStorage or use empty string
 
         // Diet CO2 values
         const DIET_CO2 = {
@@ -520,16 +520,22 @@
         async function fetchAiTips(total, carKm, flights, electricity, diet) {
             const tipsContent = document.getElementById('aiTipsContent');
             
-            if (!GROQ_API_KEY || GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") {
-                tipsContent.innerHTML = `
-                    <p><strong>AI Tips Disabled</strong></p>
-                    <p>To enable personalized AI tips:</p>
-                    <ol>
-                        <li>Get a free Groq API key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></li>
-                        <li>Replace "YOUR_GROQ_API_KEY_HERE" in the JavaScript code with your key</li>
-                    </ol>
-                `;
-                return;
+            let apiKey = GROQ_API_KEY;
+            
+            if (!apiKey) {
+                apiKey = prompt("To enable AI tips, enter your Groq API key from https://console.groq.com\n\n(Your key will be saved in browser only, not sent to any server)");
+                if (!apiKey) {
+                    tipsContent.innerHTML = `
+                        <p><strong>AI Tips Disabled</strong></p>
+                        <p>To enable personalized AI tips:</p>
+                        <ol>
+                            <li>Get a free Groq API key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></li>
+                            <li>Click "Calculate Footprint" and paste your API key when prompted</li>
+                        </ol>
+                    `;
+                    return;
+                }
+                localStorage.setItem('groqApiKey', apiKey);
             }
 
             tipsContent.innerHTML = '<p><span class="loading">⏳</span> Getting personalized tips...</p>';
@@ -542,7 +548,7 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${GROQ_API_KEY}`
+                        "Authorization": `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
                         model: "llama-3.1-8b-instant",
