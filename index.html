@@ -541,7 +541,7 @@
             tipsContent.innerHTML = '<p><span class="loading">⏳</span> Getting personalized tips...</p>';
 
             const dietLabel = DIET_LABELS[diet];
-            const prompt = `The user has a carbon footprint of ${total} tonnes CO₂ per year. They travel ${carKm} km by car daily, take ${flights} flights per year, use ${electricity} kWh electricity per month and follow a ${dietLabel} diet. Give exactly 3 short, specific, practical tips to reduce their carbon footprint. Format as a numbered list. Keep each tip under 2 sentences.`;
+            const promptText = `The user has a carbon footprint of ${total} tonnes CO₂ per year. They travel ${carKm} km by car daily, take ${flights} flights per year, use ${electricity} kWh electricity per month and follow a ${dietLabel} diet. Give exactly 3 short, specific, practical tips to reduce their carbon footprint. Format as a numbered list. Keep each tip under 2 sentences.`;
 
             try {
                 const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -552,7 +552,7 @@
                     },
                     body: JSON.stringify({
                         model: "llama-3.1-8b-instant",
-                        messages: [{ role: "user", content: prompt }],
+                        messages: [{ role: "user", content: promptText }],
                         max_tokens: 300
                     })
                 });
