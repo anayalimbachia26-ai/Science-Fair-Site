@@ -4,608 +4,1182 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carbon Footprint Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-* {
-margin: 0;
-padding: 0;
-box-sizing: border-box;
+:root {
+  --green-dark: #1a472a;
+  --green-mid:  #2d5a3d;
+  --green-light:#4ade80;
+  --accent:     #f9a825;
+  --accent2:    #e879f9;
+  --blue:       #38bdf8;
+  --card-bg:    #ffffff;
+  --text:       #1e1e1e;
+  --muted:      #6b7280;
+  --radius:     18px;
 }
+
+* { margin:0; padding:0; box-sizing:border-box; }
 
 body {
-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
-min-height: 100vh;
-padding: 20px;
-color: #333;
+  font-family: 'Nunito', sans-serif;
+  background: var(--green-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--text);
 }
 
-.container {
-max-width: 800px;
-margin: 0 auto;
+/* Animated background blobs */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.25;
+  animation: drift 12s ease-in-out infinite alternate;
+}
+.blob-1 { width:400px;height:400px;background:#4ade80;top:-100px;left:-100px;animation-delay:0s; }
+.blob-2 { width:300px;height:300px;background:#f9a825;bottom:-80px;right:-60px;animation-delay:3s; }
+.blob-3 { width:250px;height:250px;background:#38bdf8;top:40%;left:60%;animation-delay:6s; }
+
+@keyframes drift {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(30px,40px) scale(1.1); }
 }
 
-header {
-text-align: center;
-color: white;
-margin-bottom: 40px;
-padding: 20px;
+/* ── Layout ── */
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
 }
 
-header .badge {
-display: inline-block;
-background: rgba(255, 255, 255, 0.2);
-padding: 8px 16px;
-border-radius: 20px;
-font-size: 0.85rem;
-margin-bottom: 10px;
+/* ── Top bar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
 }
 
-h1 {
-font-size: 2.5rem;
-margin-bottom: 10px;
+.badge {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.subtitle {
-font-size: 1.1rem;
-opacity: 0.9;
+.live-counter {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 30px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 0.85rem;
 }
 
-.card {
-background: white;
-border-radius: 12px;
-padding: 24px;
-margin-bottom: 20px;
-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+.live-counter .val {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--green-light);
+  transition: all 0.4s;
 }
 
-.card-header {
-display: flex;
-align-items: center;
-margin-bottom: 20px;
-padding-bottom: 15px;
-border-bottom: 2px solid #e5e7eb;
+/* ── Progress ── */
+.progress-wrap {
+  margin-bottom: 28px;
 }
 
-.card-icon {
-font-size: 1.8rem;
-margin-right: 12px;
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
-.card-title {
-font-size: 1.3rem;
-font-weight: 600;
-color: #1a472a;
-}
-
-.slider-group {
-margin-bottom: 24px;
-}
-
-.slider-header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-bottom: 8px;
-}
-
-.slider-label {
-font-weight: 500;
-color: #333;
-}
-
-.slider-value {
-font-weight: 600;
-color: #2d5a3d;
-font-size: 1rem;
-}
-
-.slider-unit {
-font-size: 0.85rem;
-opacity: 0.7;
-}
-
-input[type="range"] {
-width: 100%;
-height: 6px;
-border-radius: 3px;
-background: linear-gradient(to right, #2d5a3d 0%, #2d5a3d var(--pct), #e5e7eb var(--pct), #e5e7eb 100%);
-outline: none;
--webkit-appearance: none;
-appearance: none;
-cursor: pointer;
-}
-
-input[type="range"]::-webkit-slider-thumb {
--webkit-appearance: none;
-appearance: none;
-width: 20px;
-height: 20px;
-border-radius: 50%;
-background: #2d5a3d;
-cursor: pointer;
-box-shadow: 0 2px 8px rgba(45, 90, 61, 0.3);
-}
-
-input[type="range"]::-moz-range-thumb {
-width: 20px;
-height: 20px;
-border-radius: 50%;
-background: #2d5a3d;
-cursor: pointer;
-border: none;
-box-shadow: 0 2px 8px rgba(45, 90, 61, 0.3);
-}
-
-.slider-minmax {
-display: flex;
-justify-content: space-between;
-font-size: 0.75rem;
-color: #999;
-margin-top: 4px;
-}
-
-select {
-width: 100%;
-padding: 12px;
-border: 2px solid #e5e7eb;
-border-radius: 8px;
-font-size: 1rem;
-background: white;
-cursor: pointer;
-transition: all 0.2s;
-}
-
-select:focus {
-outline: none;
-border-color: #2d5a3d;
-box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.1);
-}
-
-select option {
-padding: 8px;
-}
-
-.button-group {
-display: flex;
-gap: 12px;
-margin-top: 24px;
-}
-
-button {
-flex: 1;
-padding: 14px 24px;
-border: none;
-border-radius: 8px;
-font-size: 1rem;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.2s;
-}
-
-.btn-calculate {
-background: linear-gradient(135deg, #2d5a3d, #1a472a);
-color: white;
-}
-
-.btn-calculate:hover {
-transform: translateY(-2px);
-box-shadow: 0 8px 20px rgba(45, 90, 61, 0.3);
-}
-
-.btn-calculate:active {
-transform: translateY(0);
-}
-
-.btn-reset {
-background: #f3f4f6;
-color: #333;
-border: 2px solid #e5e7eb;
-}
-
-.btn-reset:hover {
-background: #e5e7eb;
-}
-
-.result-card {
-background: linear-gradient(135deg, #1a472a, #2d5a3d);
-color: white;
-padding: 32px;
-border-radius: 12px;
-margin-top: 20px;
-text-align: center;
-animation: slideIn 0.4s ease-out;
-}
-
-@keyframes slideIn {
-from {
-opacity: 0;
-transform: translateY(20px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-
-.result-value {
-font-size: 3.5rem;
-font-weight: 700;
-margin-bottom: 8px;
-}
-
-.result-label {
-font-size: 1.1rem;
-opacity: 0.9;
-margin-bottom: 20px;
-}
-
-.progress-bar {
-width: 100%;
-height: 8px;
-background: rgba(255, 255, 255, 0.2);
-border-radius: 4px;
-margin: 20px 0;
-overflow: hidden;
+.progress-track {
+  height: 6px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .progress-fill {
-height: 100%;
-background: linear-gradient(90deg, #4ade80, #fbbf24);
-border-radius: 4px;
-animation: fillProgress 0.8s ease-out;
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-light), var(--accent));
+  border-radius: 10px;
+  transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-@keyframes fillProgress {
-from {
-width: 0;
-}
-to {
-width: var(--progress);
-}
-}
-
-.comparison {
-font-size: 0.95rem;
-opacity: 0.85;
-margin-top: 16px;
+/* ── Step dots ── */
+.step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
 }
 
-.comparison.above {
-color: #fca5a5;
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  transition: all 0.3s;
+  cursor: pointer;
 }
 
-.comparison.below {
-color: #86efac;
+.dot.done  { background: var(--green-light); width: 20px; border-radius: 4px; }
+.dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+
+/* ── Card ── */
+.step-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  animation: cardIn 0.45s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+  overflow: hidden;
 }
 
-.ai-tips {
-background: white;
-padding: 24px;
-border-radius: 12px;
-margin-top: 20px;
-border-left: 4px solid #2d5a3d;
+.step-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--green-light), var(--accent));
 }
 
-.ai-tips h3 {
-color: #1a472a;
-margin-bottom: 12px;
-display: flex;
-align-items: center;
-gap: 8px;
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.ai-tips p {
-line-height: 1.6;
-color: #555;
-margin-bottom: 8px;
+@keyframes cardOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-20px) scale(0.97); }
 }
 
-.ai-tips ol {
-margin-left: 20px;
-color: #555;
-line-height: 1.8;
+.card-exiting {
+  animation: cardOut 0.3s ease forwards;
 }
 
-.ai-tips li {
-margin-bottom: 12px;
+/* Step header */
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 28px;
 }
 
-.loading {
-display: inline-block;
-animation: spin 1s linear infinite;
+.step-emoji {
+  font-size: 2.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+  animation: bounce 0.6s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-@keyframes spin {
-to {
-transform: rotate(360deg);
-}
-}
-
-.hidden {
-display: none;
+@keyframes bounce {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
 }
 
-.input-group {
-margin-bottom: 20px;
+
+.step-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--green-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.step-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  line-height: 1.2;
 }
 
-.input-group label {
-display: block;
-margin-bottom: 8px;
-font-weight: 500;
-color: #333;
+/* Fun reaction bubble */
+.reaction {
+  position: absolute;
+  top: 20px; right: 20px;
+  font-size: 1.6rem;
+  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn {
+  from { transform: scale(0) rotate(-20deg); opacity:0; }
+  to   { transform: scale(1) rotate(0deg); opacity:1; }
+}
+
+/* ── Slider ── */
+.q-block { margin-bottom: 28px; }
+
+.q-label {
+  font-weight: 700;
+  font-size: 0.97rem;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.q-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.slider-display {
+  text-align: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  margin-bottom: 10px;
+}
+
+.slider-display span { font-size: 1rem; font-family: 'Nunito', sans-serif; color: var(--muted); font-weight: 600; }
+
+input[type="range"] {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--green-mid) 0%, var(--green-mid) var(--pct), #e5e7eb var(--pct), #e5e7eb 100%);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(26,71,42,0.4);
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+input[type="range"]::-moz-range-thumb {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  cursor: pointer;
+  border: none;
+}
+.slider-minmax {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: #aaa;
+  margin-top: 6px;
+}
+
+/* ── Select ── */
+.styled-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.styled-select:focus {
+  outline: none;
+  border-color: var(--green-mid);
+  box-shadow: 0 0 0 3px rgba(45,90,61,0.12);
+}
+
+/* ── Pill radio buttons ── */
+.pill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pill-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.pill-grid.cols-1 { grid-template-columns: 1fr; }
+
+.pill-grid input[type="radio"] { display: none; }
+
+.pill-grid label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+  text-align: center;
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: #555;
+  min-height: 70px;
+}
+
+.pill-grid label .pill-emoji { font-size: 1.5rem; }
+
+.pill-grid input[type="radio"]:checked + label {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  color: white;
+  transform: scale(1.04);
+  box-shadow: 0 6px 20px rgba(26,71,42,0.25);
+}
+
+.pill-grid label:hover:not(:has(+ input:checked)) {
+  border-color: var(--green-mid);
+  background: #f0fdf4;
+}
+
+/* ── Navigation ── */
+.nav-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.btn-back {
+  padding: 14px 22px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.btn-back:hover { background: #f3f4f6; border-color: #ccc; }
+
+.btn-next {
+  flex: 1;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.02em;
+}
+.btn-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(45,90,61,0.35);
+}
+.btn-next:active { transform: translateY(0); }
+.btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── Result screen ── */
+.result-screen {
+  animation: cardIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.result-hero {
+  background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+  border-radius: var(--radius);
+  padding: 36px 28px;
+  text-align: center;
+  color: white;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.result-emoji { font-size: 4rem; margin-bottom: 10px; display: block; animation: bounce 0.6s; }
+
+.result-number {
+  font-family: 'Syne', sans-serif;
+  font-size: 4.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.result-sub { font-size: 1rem; opacity: 0.85; margin-bottom: 20px; }
+
+.vs-bar {
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.vs-bar.above { color: #fca5a5; }
+.vs-bar.below { color: #86efac; }
+
+/* Breakdown cards */
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.b-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px 12px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.b-card .b-ico { font-size: 1.4rem; margin-bottom: 4px; }
+.b-card .b-name { font-size: 0.72rem; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+.b-card .b-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--green-dark);
+}
+
+.b-card .b-bar-wrap {
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.b-card .b-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s ease;
+}
+
+/* AI tips */
+.tips-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  border-left: 5px solid var(--green-mid);
+  margin-bottom: 20px;
+}
+
+.tips-card h3 {
+  font-family: 'Syne', sans-serif;
+  color: var(--green-dark);
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tips-card ol { margin-left: 20px; color: #444; line-height: 1.8; }
+.tips-card li { margin-bottom: 10px; font-size: 0.95rem; }
+.tips-card p  { color: #555; line-height: 1.6; font-size: 0.95rem; }
+
+.loading-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.loading-dots span {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green-mid);
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0.6); opacity:0.5; }
+  40% { transform: scale(1.2); opacity:1; }
+}
+
+/* Restart button */
+.btn-restart {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-restart:hover { background: rgba(255,255,255,0.2); }
+
+.hidden { display: none !important; }
+
+/* Confetti particle */
+.confetti-wrap {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+.c-particle {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+  top: -20px;
+}
+@keyframes confettiFall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 </style>
 </head>
 <body>
-<div class="container">
-  <!-- Header -->
-  <header>
-    <div class="badge">Science Fair Project</div>
-    <h1>Carbon Footprint Calculator</h1>
-    <p class="subtitle">Discover your impact. Get AI-powered tips to reduce it.</p>
-  </header>
 
-  <!-- Transport Card -->
-  <div class="card">
-    <div class="card-header">
-      <span class="card-icon">🚗</span>
-      <h2 class="card-title">Transport</h2>
-    </div>
-    <div class="slider-group">
-      <div class="slider-header">
-        <label class="slider-label">Car Travel</label>
-        <span class="slider-value"><span id="carValue">20</span> <span class="slider-unit">km/day</span></span>
-      </div>
-      <input type="range" id="carKm" min="0" max="100" value="20" style="--pct: 20%;">
-      <div class="slider-minmax">
-        <span>0</span>
-        <span>100 km/day</span>
-      </div>
-    </div>
+<div class="bg">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
 
-    <div class="slider-group">
-      <div class="slider-header">
-        <label class="slider-label">Flights</label>
-        <span class="slider-value"><span id="flightValue">2</span> <span class="slider-unit">per year</span></span>
-      </div>
-      <input type="range" id="flights" min="0" max="20" value="2" style="--pct: 10%;">
-      <div class="slider-minmax">
-        <span>0</span>
-        <span>20 per year</span>
-      </div>
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<div class="app">
+
+  <!-- Top bar -->
+  <div class="topbar" id="topbar">
+    <div class="badge">🌱 Science Fair</div>
+    <div class="live-counter">
+      🌍 <span class="val" id="liveVal">0.0</span> t CO₂/yr
+      <span style="font-size:0.7rem;opacity:0.7;display:block;text-align:right;line-height:1;">estimated so far</span>
     </div>
   </div>
 
-  <!-- Energy Card -->
-  <div class="card">
-    <div class="card-header">
-      <span class="card-icon">⚡</span>
-      <h2 class="card-title">Energy & Home</h2>
+  <!-- Progress -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-info">
+      <span id="stepLabel">Step 1 of 6</span>
+      <span id="stepPct">0%</span>
     </div>
-    <div class="slider-group">
-      <div class="slider-header">
-        <label class="slider-label">Monthly Electricity</label>
-        <span class="slider-value"><span id="electricityValue">150</span> <span class="slider-unit">kWh</span></span>
-      </div>
-      <input type="range" id="electricity" min="0" max="500" value="150" style="--pct: 30%;">
-      <div class="slider-minmax">
-        <span>0</span>
-        <span>500 kWh</span>
-      </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
     </div>
   </div>
 
-  <!-- Diet Card -->
-  <div class="card">
-    <div class="card-header">
-      <span class="card-icon">🍽️</span>
-      <h2 class="card-title">Diet</h2>
-    </div>
-    <div class="input-group">
-      <label for="diet">Select your diet type:</label>
-      <select id="diet">
-        <option value="vegan">Vegan</option>
-        <option value="vegetarian">Vegetarian</option>
-        <option value="occasional-meat" selected>Non-vegetarian (occasional)</option>
-        <option value="daily-meat">Non-vegetarian (daily meat)</option>
-      </select>
-    </div>
-  </div>
+  <!-- Step dots -->
+  <div class="step-dots" id="stepDots"></div>
 
-  <!-- Calculate Button -->
-  <div class="button-group">
-    <button class="btn-calculate" onclick="calculate()">Calculate Footprint</button>
-    <button class="btn-reset" onclick="reset()">Reset</button>
-  </div>
+  <!-- Step container -->
+  <div id="stepContainer"></div>
 
-  <!-- Result Card -->
-  <div id="resultContainer" class="hidden">
-    <div class="result-card">
-      <div class="result-value"><span id="resultValue">0</span> tonnes</div>
-      <div class="result-label">CO₂ per year</div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
-      <div id="comparison" class="comparison"></div>
-    </div>
+  <!-- Result screen -->
+  <div id="resultScreen" class="result-screen hidden"></div>
 
-    <!-- AI Tips -->
-    <div class="ai-tips">
-      <h3>💡 Personalized AI Tips</h3>
-      <div id="aiTipsContent">
-        <p><span class="loading">⏳</span> Getting personalized tips...</p>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-const GLOBAL_AVERAGE = 4.0;
+// ── Data ──────────────────────────────────────────────────────────
+const GLOBAL_AVG = 4.0;
 
-// ✅ FIX 1: Removed the top-level `const GROQ_API_KEY` that was frozen at page load.
-// The key is now always read fresh from localStorage inside fetchAiTips().
+const DIET_CO2 = { vegan:1.0, vegetarian:1.5, "occasional-meat":2.5, "daily-meat":4.0 };
+const DIET_LABELS = { vegan:"Vegan", vegetarian:"Vegetarian", "occasional-meat":"Occasional meat", "daily-meat":"Daily meat" };
 
-const DIET_CO2 = {
-  "vegan": 1.0,
-  "vegetarian": 1.5,
-  "occasional-meat": 2.5,
-  "daily-meat": 4.0
+const CLOTHES_CO2     = { rarely:0.1, occasional:0.3, monthly:0.6, weekly:1.2 };
+const ELECTRONICS_CO2 = { rarely:0.1, occasional:0.25, frequent:0.5, veryfrequent:0.9 };
+const LOCAL_CO2       = { mostlyLocal:0.0, mixed:0.15, mostlyImported:0.35 };
+const RECYCLE_CO2     = { always:0.0, sometimes:0.1, rarely:0.25, never:0.45 };
+const SHOWER_CO2      = { short:0.05, medium:0.12, long:0.22, verylong:0.38 };
+const WATERSAVE_CO2   = { always:0.0, sometimes:0.05, no:0.12 };
+const FOODWASTE_CO2   = { none:0.0, some:0.15, alot:0.35 };
+const PLASTIC_CO2     = { never:0.0, sometimes:0.08, often:0.18, always:0.3 };
+const WASTE_CO2       = { half:0.05, one:0.12, three:0.25, many:0.45 };
+
+const BREAKDOWN_COLORS = ["#4ade80","#34d399","#a3e635","#fb923c","#38bdf8","#e879f9"];
+
+// ── Answers store ─────────────────────────────────────────────────
+const ans = {
+  carKm: 0,
+  carDays: 0,
+  electricity: 0,
+  diet: null,
+  clothes: null,
+  electronics: null,
+  recycle: null,
+  shower: null,
+  waterSaving: null,
+  foodWaste: null,
+  plastic: null,
+  generalWaste: null
 };
 
-const DIET_LABELS = {
-  "vegan": "Vegan",
-  "vegetarian": "Vegetarian",
-  "occasional-meat": "Non-vegetarian (occasional)",
-  "daily-meat": "Non-vegetarian (daily meat)"
-};
+// ── Steps definition ──────────────────────────────────────────────
+const STEPS = [
+  {
+    id: "transport",
+    emoji: "🚗",
+    label: "Section 1 of 6",
+    title: "How do you get around?",
+    reaction: (a) => "😊",
+    render: () => `
+      <div class="q-block">
+        <div class="q-label">Daily car travel distance</div>
+        <div class="q-hint">Include commute, errands, and any other car trips</div>
+        <div class="slider-display" id="disp-carKm">${ans.carKm} <span>km / day</span></div>
+        <input type="range" id="sl-carKm" min="0" max="100" value="${ans.carKm}" style="--pct:${ans.carKm}%;"
+          oninput="updateSlider('carKm',this,100,'disp-carKm','km / day')">
+        <div class="slider-minmax"><span>0 km</span><span>100 km</span></div>
+      </div>
+      <div class="q-block">
+        <div class="q-label">How many days a week do you drive?</div>
+        <div class="slider-display" id="disp-carDays">${ans.carDays} <span>days / week</span></div>
+        <input type="range" id="sl-carDays" min="0" max="7" value="${ans.carDays}" style="--pct:${(ans.carDays/7)*100}%;"
+          oninput="updateSlider('carDays',this,7,'disp-carDays','days / week')">
+        <div class="slider-minmax"><span>0</span><span>7</span></div>
+      </div>
+    `,
+    save: () => {
+      ans.carKm = +document.getElementById('sl-carKm').value;
+      ans.carDays = +document.getElementById('sl-carDays').value;
+    }
+  },
+  {
+    id: "energy",
+    emoji: "⚡",
+    label: "Section 2 of 6",
+    title: "Energy at home",
+    reaction: (a) => "💡",
+    render: () => `
+      <div class="q-block">
+        <div class="q-label">Monthly electricity usage</div>
+        <div class="q-hint">Check your electricity bill — average Indian home uses ~90 kWh/month</div>
+        <div class="slider-display" id="disp-elec">${ans.electricity} <span>kWh / month</span></div>
+        <input type="range" id="sl-elec" min="0" max="500" value="${ans.electricity}" style="--pct:${ans.electricity/5}%;"
+          oninput="updateSlider('electricity',this,500,'disp-elec','kWh / month')">
+        <div class="slider-minmax"><span>0 kWh</span><span>500 kWh</span></div>
+      </div>
+    `,
+    save: () => { ans.electricity = +document.getElementById('sl-elec').value; }
+  },
+  {
+    id: "diet",
+    emoji: "🍽️",
+    label: "Section 3 of 6",
+    title: "What's on your plate?",
+    reaction: (a) => ({ vegan:"🥦", vegetarian:"🥗", "occasional-meat":"🍗", "daily-meat":"🥩" }[a.diet]),
+    render: () => `
+      <div class="q-block">
+        <div class="q-label">Which best describes your diet?</div>
+        <div class="q-hint">Food choices can account for 10–30% of your carbon footprint</div>
+        <div class="pill-grid cols-1" style="gap:10px;">
+          ${[
+            {v:"vegan",       e:"🥦", t:"Vegan",                    d:"No animal products at all"},
+            {v:"vegetarian",  e:"🥗", t:"Vegetarian",               d:"No meat, but dairy & eggs ok"},
+            {v:"occasional-meat",e:"🍗",t:"Occasional meat eater",  d:"Meat a few times a week"},
+            {v:"daily-meat",  e:"🥩", t:"Daily meat eater",         d:"Meat with most meals"},
+          ].map(o=>`
+            <input type="radio" name="diet" id="diet-${o.v}" value="${o.v}" ${ans.diet===o.v?"checked":""}>
+            <label for="diet-${o.v}" style="flex-direction:row;justify-content:flex-start;gap:14px;min-height:56px;">
+              <span style="font-size:1.6rem;">${o.e}</span>
+              <span>
+                <span style="display:block;font-size:0.95rem;font-weight:800;">${o.t}</span>
+                <span style="display:block;font-size:0.78rem;opacity:0.7;font-weight:400;">${o.d}</span>
+              </span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `,
+    save: () => {
+      const el = document.querySelector('input[name="diet"]:checked');
+      if (el) ans.diet = el.value;
+    }
+  },
+  {
+    id: "lifestyle",
+    emoji: "🛍️",
+    label: "Section 4 of 6",
+    title: "Shopping & lifestyle",
+    reaction: (a) => {
+      const score = (CLOTHES_CO2[a.clothes]||0)+(ELECTRONICS_CO2[a.electronics]||0)+(RECYCLE_CO2[a.recycle]||0);
+      return score < 0.5 ? "♻️" : score < 1.0 ? "🛒" : score < 1.8 ? "😬" : "🛍️";
+    },
+    render: () => `
+      <div class="q-block">
+        <div class="q-label">How often do you buy new electronics?</div>
+        <div class="q-hint">A single smartphone takes ~70 kg of CO₂ to manufacture</div>
+        <div class="pill-grid">
+          ${[
+            {v:"rarely",      e:"📱", t:"Every 5+ years"},
+            {v:"occasional",  e:"💻", t:"Every 3–5 years"},
+            {v:"frequent",    e:"🎮", t:"Every 1–2 years"},
+            {v:"veryfrequent",e:"🔄", t:"Yearly or more"},
+          ].map(o=>`
+            <input type="radio" name="electronics" id="el-${o.v}" value="${o.v}" ${ans.electronics===o.v?"checked":""}>
+            <label for="el-${o.v}"><span class="pill-emoji">${o.e}</span>${o.t}</label>
+          `).join('')}
+        </div>
+      </div>
 
-// Update slider values in real-time
-document.getElementById('carKm').addEventListener('input', (e) => {
-  const val = e.target.value;
-  document.getElementById('carValue').textContent = val;
-  e.target.style.setProperty('--pct', (val / 100) * 100 + '%');
-});
+      <div class="q-block">
+        <div class="q-label">Do you recycle or reuse items?</div>
+        <div class="pill-grid">
+          ${[
+            {v:"always",    e:"♻️", t:"Always recycle & reuse"},
+            {v:"sometimes", e:"🤔", t:"Sometimes"},
+            {v:"rarely",    e:"😕", t:"Rarely"},
+            {v:"never",     e:"🗑️", t:"Never"},
+          ].map(o=>`
+            <input type="radio" name="recycle" id="re-${o.v}" value="${o.v}" ${ans.recycle===o.v?"checked":""}>
+            <label for="re-${o.v}"><span class="pill-emoji">${o.e}</span>${o.t}</label>
+          `).join('')}
+        </div>
+      </div>
+    `,
+    save: () => {
+      ["electronics","recycle"].forEach(n => {
+        const el = document.querySelector(`input[name="${n}"]:checked`);
+        if (el) ans[n] = el.value;
+      });
+    }
+  },
+  {
+    id: "water",
+    emoji: "🚿",
+    label: "Section 5 of 6",
+    title: "Water habits",
+    reaction: (a) => {
+      const score = (SHOWER_CO2[a.shower]||0)+(WATERSAVE_CO2[a.waterSaving]||0);
+      return score < 0.1 ? "💧" : score < 0.2 ? "🚿" : "🌊";
+    },
+    render: () => `
+      <div class="q-block">
+        <div class="q-label">How long are your showers?</div>
+        <div class="q-hint">Heating water uses energy — a 10-min shower uses ~2× as much as a 5-min one</div>
+        <div class="pill-grid">
+          ${[
+            {v:"short",   e:"⚡", t:"Under 5 mins"},
+            {v:"medium",  e:"🚿", t:"5–10 mins"},
+            {v:"long",    e:"💦", t:"10–20 mins"},
+            {v:"verylong",e:"🌊", t:"20+ mins"},
+          ].map(o=>`
+            <input type="radio" name="shower" id="sh-${o.v}" value="${o.v}" ${ans.shower===o.v?"checked":""}>
+            <label for="sh-${o.v}"><span class="pill-emoji">${o.e}</span>${o.t}</label>
+          `).join('')}
+        </div>
+      </div>
 
-document.getElementById('flights').addEventListener('input', (e) => {
-  const val = e.target.value;
-  document.getElementById('flightValue').textContent = val;
-  e.target.style.setProperty('--pct', (val / 20) * 100 + '%');
-});
+      <div class="q-block">
+        <div class="q-label">Do you use water-saving methods?</div>
+        <div class="q-hint">e.g. turning off tap while brushing, using a bucket, low-flow taps</div>
+        <div class="pill-grid cols-3">
+          ${[
+            {v:"always",    e:"💚", t:"Always"},
+            {v:"sometimes", e:"🤷", t:"Sometimes"},
+            {v:"no",        e:"❌", t:"Not really"},
+          ].map(o=>`
+            <input type="radio" name="waterSaving" id="ws-${o.v}" value="${o.v}" ${ans.waterSaving===o.v?"checked":""}>
+            <label for="ws-${o.v}"><span class="pill-emoji">${o.e}</span>${o.t}</label>
+          `).join('')}
+        </div>
+      </div>
+    `,
+    save: () => {
+      ["shower","waterSaving"].forEach(n => {
+        const el = document.querySelector(`input[name="${n}"]:checked`);
+        if (el) ans[n] = el.value;
+      });
+    }
+  },
+  {
+    id: "waste",
+    emoji: "🗑️",
+    label: "Section 6 of 6",
+    title: "Waste & trash",
+    reaction: (a) => {
+      const score = (FOODWASTE_CO2[a.foodWaste]||0)+(PLASTIC_CO2[a.plastic]||0)+(WASTE_CO2[a.generalWaste]||0);
+      return score < 0.2 ? "🌿" : score < 0.5 ? "🗑️" : "🚮";
+    },
+    render: () => `
+      <div class="q-block">
+        <div class="q-label">How much food do you waste?</div>
+        <div class="q-hint">Food waste in landfills releases methane — 25× more potent than CO₂</div>
+        <div class="pill-grid cols-3">
+          ${[
+            {v:"none", e:"🌱", t:"Very little / compost"},
+            {v:"some",  e:"🍱", t:"Some occasionally"},
+            {v:"alot",  e:"🗑️", t:"A lot goes to bin"},
+          ].map(o=>`
+            <input type="radio" name="foodWaste" id="fw-${o.v}" value="${o.v}" ${ans.foodWaste===o.v?"checked":""}>
+            <label for="fw-${o.v}"><span class="pill-emoji">${o.e}</span>${o.t}</label>
+          `).join('')}
+        </div>
+      </div>
 
-document.getElementById('electricity').addEventListener('input', (e) => {
-  const val = e.target.value;
-  document.getElementById('electricityValue').textContent = val;
-  e.target.style.setProperty('--pct', (val / 500) * 100 + '%');
-});
+      <div class="q-block">
+        <div class="q-label">How often do you use single-use plastics?</div>
+        <div class="q-hint">e.g. plastic bags, disposable cups, straws, takeaway containers</div>
+        <div class="pill-grid">
+          ${[
+            {v:"never",     e:"🧴", t:"Never — I use reusables"},
+            {v:"sometimes", e:"🤔", t:"Sometimes"},
+            {v:"often",     e:"🥤", t:"Often"},
+            {v:"always",    e:"🛒", t:"Almost always"},
+          ].map(o=>`
+            <input type="radio" name="plastic" id="pl-${o.v}" value="${o.v}" ${ans.plastic===o.v?"checked":""}>
+            <label for="pl-${o.v}"><span class="pill-emoji">${o.e}</span>${o.t}</label>
+          `).join('')}
+        </div>
+      </div>
 
-function calculate() {
-  const carKm = parseFloat(document.getElementById('carKm').value);
-  const flights = parseFloat(document.getElementById('flights').value);
-  const electricity = parseFloat(document.getElementById('electricity').value);
-  const diet = document.getElementById('diet').value;
-
-  // Calculate CO2
-  const carCO2 = carKm * 365 * 0.00021;
-  const flightCO2 = flights * 0.5;
-  const electricityCO2 = electricity * 12 * 0.00082;
-  const dietCO2 = DIET_CO2[diet];
-
-  const total = Math.round((carCO2 + flightCO2 + electricityCO2 + dietCO2) * 10) / 10;
-
-  // Show result
-  document.getElementById('resultValue').textContent = total;
-
-  const progressPct = Math.min((total / (GLOBAL_AVERAGE * 2)) * 100, 100);
-  const progressFill = document.getElementById('progressFill');
-  progressFill.style.setProperty('--progress', progressPct + '%');
-
-  // Show comparison
-  const comparison = document.getElementById('comparison');
-  if (total > GLOBAL_AVERAGE) {
-    const excess = (total - GLOBAL_AVERAGE).toFixed(1);
-    comparison.innerHTML = `⚠️ You're ${excess} tonnes above the global average (${GLOBAL_AVERAGE} tonnes)`;
-    comparison.className = 'comparison above';
-  } else {
-    const savings = (GLOBAL_AVERAGE - total).toFixed(1);
-    comparison.innerHTML = `✅ You're ${savings} tonnes below the global average (${GLOBAL_AVERAGE} tonnes)`;
-    comparison.className = 'comparison below';
+      <div class="q-block">
+        <div class="q-label">Household waste bags per week?</div>
+        <div class="pill-grid">
+          ${[
+            {v:"half",  e:"✨", t:"Less than 1 bag"},
+            {v:"one",   e:"🗑️", t:"1–2 bags"},
+            {v:"three", e:"📦", t:"3–4 bags"},
+            {v:"many",  e:"🚛", t:"5+ bags"},
+          ].map(o=>`
+            <input type="radio" name="generalWaste" id="gw-${o.v}" value="${o.v}" ${ans.generalWaste===o.v?"checked":""}>
+            <label for="gw-${o.v}"><span class="pill-emoji">${o.e}</span>${o.t}</label>
+          `).join('')}
+        </div>
+      </div>
+    `,
+    save: () => {
+      ["foodWaste","plastic","generalWaste"].forEach(n => {
+        const el = document.querySelector(`input[name="${n}"]:checked`);
+        if (el) ans[n] = el.value;
+      });
+    }
   }
+];
 
-  document.getElementById('resultContainer').classList.remove('hidden');
+// ── State ─────────────────────────────────────────────────────────
+let currentStep = 0;
 
-  // Fetch AI tips
-  fetchAiTips(total, carKm, flights, electricity, diet);
+// ── CO2 calculation ───────────────────────────────────────────────
+function calcTotal() {
+  const transport  = ans.carKm * (ans.carDays * 52) * 0.00021;
+  const energy     = ans.electricity * 12 * 0.00082;
+  const diet       = DIET_CO2[ans.diet] || 0;
+  const lifestyle  = (CLOTHES_CO2[ans.clothes]||0) + (ELECTRONICS_CO2[ans.electronics]||0) + (RECYCLE_CO2[ans.recycle]||0);
+  const water      = (SHOWER_CO2[ans.shower]||0) + (WATERSAVE_CO2[ans.waterSaving]||0);
+  const waste      = (FOODWASTE_CO2[ans.foodWaste]||0) + (PLASTIC_CO2[ans.plastic]||0) + (WASTE_CO2[ans.generalWaste]||0);
+  return { transport, energy, diet, lifestyle, water, waste,
+           total: Math.round((transport+energy+diet+lifestyle+water+waste)*10)/10 };
 }
 
-async function fetchAiTips(total, carKm, flights, electricity, diet) {
-  const tipsContent = document.getElementById('aiTipsContent');
+function updateLive() {
+  const { total } = calcTotal();
+  document.getElementById('liveVal').textContent = total.toFixed(1);
+}
 
-  // ✅ FIX 1: Always read the key fresh from localStorage — never from a stale const.
+// ── Slider helper ─────────────────────────────────────────────────
+function updateSlider(key, el, max, dispId, unit) {
+  const val = +el.value;
+  ans[key] = val;
+  el.style.setProperty('--pct', (val/max)*100 + '%');
+  document.getElementById(dispId).innerHTML = `${val} <span>${unit}</span>`;
+  updateLive();
+}
+
+// ── Dots ──────────────────────────────────────────────────────────
+function renderDots() {
+  const wrap = document.getElementById('stepDots');
+  wrap.innerHTML = STEPS.map((_, i) => {
+    const cls = i < currentStep ? 'dot done' : i === currentStep ? 'dot active' : 'dot';
+    return `<div class="${cls}" onclick="goToStep(${i})"></div>`;
+  }).join('');
+}
+
+function goToStep(i) {
+  if (i <= currentStep) {
+    STEPS[currentStep].save();
+    currentStep = i;
+    renderStep();
+  }
+}
+
+// ── Render step ───────────────────────────────────────────────────
+function renderStep() {
+  const step = STEPS[currentStep];
+  const total = STEPS.length;
+
+  // Progress
+  const pct = Math.round((currentStep / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stepLabel').textContent = step.label;
+  document.getElementById('stepPct').textContent = pct + '%';
+
+  renderDots();
+
+  const reaction = step.reaction(ans);
+
+  document.getElementById('stepContainer').innerHTML = `
+    <div class="step-card" id="activeCard">
+      <div class="reaction">${reaction}</div>
+      <div class="step-header">
+        <div class="step-emoji">${step.emoji}</div>
+        <div class="step-title-wrap">
+          <div class="step-label">${step.label}</div>
+          <div class="step-title">${step.title}</div>
+        </div>
+      </div>
+      ${step.render()}
+      <div class="nav-row">
+        ${currentStep > 0
+          ? `<button class="btn-back" onclick="prevStep()">← Back</button>`
+          : ''}
+        <button class="btn-next" onclick="nextStep()">
+          ${currentStep < total-1 ? 'Continue →' : '🌍 See My Results'}
+        </button>
+      </div>
+    </div>
+  `;
+
+  updateLive();
+}
+
+// ── Navigation ────────────────────────────────────────────────────
+function nextStep() {
+  STEPS[currentStep].save();
+  updateLive();
+
+  const card = document.getElementById('activeCard');
+  card.classList.add('card-exiting');
+
+  setTimeout(() => {
+    if (currentStep < STEPS.length - 1) {
+      currentStep++;
+      renderStep();
+    } else {
+      showResult();
+    }
+  }, 280);
+}
+
+function prevStep() {
+  STEPS[currentStep].save();
+  const card = document.getElementById('activeCard');
+  card.classList.add('card-exiting');
+  setTimeout(() => {
+    currentStep--;
+    renderStep();
+  }, 280);
+}
+
+// ── Result ────────────────────────────────────────────────────────
+function showResult() {
+  document.getElementById('stepContainer').innerHTML = '';
+  document.getElementById('progressWrap').classList.add('hidden');
+  document.getElementById('stepDots').classList.add('hidden');
+
+  const { transport, energy, diet, lifestyle, water, waste, total } = calcTotal();
+
+  const sections = [
+    { label:"Transport", ico:"🚗", val:transport },
+    { label:"Energy",    ico:"⚡", val:energy },
+    { label:"Diet",      ico:"🍽️", val:diet },
+    { label:"Lifestyle", ico:"🛍️", val:lifestyle },
+    { label:"Water",     ico:"🚿", val:water },
+    { label:"Waste",     ico:"🗑️", val:waste }
+  ];
+
+  const maxVal = Math.max(...sections.map(s=>s.val));
+  const resultEmoji = total < 2 ? "🌟" : total < 4 ? "🌱" : total < 6 ? "🌍" : "🔥";
+  const above = total > GLOBAL_AVG;
+  const diff  = Math.abs(total - GLOBAL_AVG).toFixed(1);
+  const vsText = above
+    ? `⚠️ ${diff} tonnes above the global average (${GLOBAL_AVG} t)`
+    : `✅ ${diff} tonnes below the global average (${GLOBAL_AVG} t)`;
+
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('stepLabel').textContent = 'Complete!';
+  document.getElementById('stepPct').textContent = '100%';
+  document.getElementById('progressWrap').classList.remove('hidden');
+  document.getElementById('stepDots').classList.remove('hidden');
+  renderDots();
+
+  const resultScreen = document.getElementById('resultScreen');
+  resultScreen.classList.remove('hidden');
+  resultScreen.innerHTML = `
+    <div class="result-hero">
+      <span class="result-emoji">${resultEmoji}</span>
+      <div class="result-number">${total}</div>
+      <div class="result-sub">tonnes of CO₂ per year</div>
+      <div class="vs-bar ${above?'above':'below'}">${vsText}</div>
+    </div>
+
+    <div class="breakdown-grid">
+      ${sections.map((s,i) => `
+        <div class="b-card">
+          <div class="b-ico">${s.ico}</div>
+          <div class="b-name">${s.label}</div>
+          <div class="b-val">${s.val.toFixed(2)}t</div>
+          <div class="b-bar-wrap">
+            <div class="b-bar" style="width:${maxVal>0?(s.val/maxVal*100).toFixed(1):0}%;background:${BREAKDOWN_COLORS[i]};"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="tips-card">
+      <h3>💡 Personalized AI Tips</h3>
+      <div id="aiTipsContent">
+        <div class="loading-dots">Getting tips <span></span><span></span><span></span></div>
+      </div>
+    </div>
+
+    <button class="btn-restart" onclick="restart()">🔄 Start Over</button>
+  `;
+
+  // Confetti if below average
+  if (!above) launchConfetti();
+
+  fetchAiTips(total);
+}
+
+// ── Confetti ──────────────────────────────────────────────────────
+function launchConfetti() {
+  const wrap = document.getElementById('confettiWrap');
+  const colors = ['#4ade80','#f9a825','#38bdf8','#e879f9','#fb923c','#fff'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'c-particle';
+    el.style.cssText = `
+      left: ${Math.random()*100}%;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      width: ${6+Math.random()*8}px;
+      height: ${6+Math.random()*8}px;
+      border-radius: ${Math.random()>0.5?'50%':'2px'};
+      animation-duration: ${1.5+Math.random()*2}s;
+      animation-delay: ${Math.random()*0.8}s;
+    `;
+    wrap.appendChild(el);
+  }
+  setTimeout(() => wrap.innerHTML = '', 4000);
+}
+
+// ── AI Tips ───────────────────────────────────────────────────────
+async function fetchAiTips(total) {
+  const tipsContent = document.getElementById('aiTipsContent');
   let apiKey = localStorage.getItem('groqApiKey') || "";
 
   if (!apiKey) {
     apiKey = prompt(
-      "To enable AI tips, enter your Groq API key from https://console.groq.com\n\n" +
-      "(Your key will be saved in your browser only, not sent to any server)"
+      "To get personalized AI tips, enter your free Groq API key.\n" +
+      "Get one at: https://console.groq.com\n\n" +
+      "(Saved in your browser only)"
     );
     if (!apiKey) {
-      tipsContent.innerHTML = `
-        <p><strong>AI Tips Disabled</strong></p>
-        <p>To enable personalized AI tips:</p>
-        <ol>
-          <li>Get a free Groq API key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></li>
-          <li>Click "Calculate Footprint" and paste your API key when prompted</li>
-        </ol>
-      `;
+      tipsContent.innerHTML = `<p>Enable AI tips by getting a free key at <a href="https://console.groq.com" target="_blank" style="color:var(--green-mid)">console.groq.com</a> and clicking "Start Over".</p>`;
       return;
     }
-    // ✅ Save to localStorage so subsequent calls don't prompt again
     localStorage.setItem('groqApiKey', apiKey);
   }
 
-  tipsContent.innerHTML = '<p><span class="loading">⏳</span> Getting personalized tips...</p>';
-
-  const dietLabel = DIET_LABELS[diet];
-
-  // ✅ FIX 2: Removed the duplicate `prompt` / `promptText` variables and the duplicate
-  // `messages` key in the JSON body (duplicate keys in an object are silently dropped).
-  const promptText = `The user has a carbon footprint of ${total} tonnes CO₂ per year. ` +
-    `They travel ${carKm} km by car daily, take ${flights} flights per year, ` +
-    `use ${electricity} kWh electricity per month and follow a ${dietLabel} diet. ` +
-    `Give exactly 3 short, specific, practical tips to reduce their carbon footprint. ` +
-    `Format as a numbered list. Keep each tip under 2 sentences.`;
+  const promptText =
+    `Carbon footprint: ${total} tonnes CO₂/year.\n` +
+    `Car: ${ans.carKm} km/day, ${ans.carDays} days/week. Electricity: ${ans.electricity} kWh/month. Diet: ${DIET_LABELS[ans.diet]}.\n` +
+    `Electronics: ${ans.electronics}. Recycle: ${ans.recycle}.\n` +
+    `Shower: ${ans.shower}. Water saving: ${ans.waterSaving}.\n` +
+    `Food waste: ${ans.foodWaste}. Plastics: ${ans.plastic}. Waste bags/wk: ${ans.generalWaste}.\n\n` +
+    `If emissions produced by user is above 4 tonnes give exactly 5 short, specific, practical tips targeting their biggest impact areas. Numbered list. Each tip under 2 sentences.\n` +
+    'else if the emissions produced by the user is below 4 tonnes,compliment the user and encourage them to keep up their good actions, and DO NOT give any Numbered list or tips, just give 2-3 line of paragraph of compliment.';
 
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
+      headers: { "Content-Type":"application/json", "Authorization":`Bearer ${apiKey}` },
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
-        messages: [{ role: "user", content: promptText }],  // ✅ only one messages key
-        max_tokens: 300
+        messages: [{ role:"user", content:promptText }],
+        max_tokens: 500
       })
     });
 
-    const data = await response.json();
+    const result = await response.json();
+    if (!response.ok) throw new Error(result?.error?.message || `HTTP ${response.status}`);
 
-    if (!response.ok) {
-      throw new Error(data?.error?.message || `HTTP ${response.status}`);
-    }
-
-    const tips = data?.choices?.[0]?.message?.content || "No tips generated";
+    const tips = result?.choices?.[0]?.message?.content || "No tips generated";
     tipsContent.innerHTML = `<ol>${
-      tips.split('\n')
-        .filter(line => line.trim())
-        .map(line => `<li>${line.replace(/^\d+\.\s*/, '')}</li>`)
-        .join('')
+      tips.split('\n').filter(l=>l.trim())
+        .map(l=>`<li>${l.replace(/^\d+\.\s*/,'')}</li>`).join('')
     }</ol>`;
   } catch (err) {
-    console.error("AI Tips Error:", err);
-    tipsContent.innerHTML = `<p><strong>Could not load AI tips:</strong> ${err.message}</p>`;
+    tipsContent.innerHTML = `<p style="color:#e55;">Could not load tips: ${err.message}</p>`;
   }
 }
 
-function reset() {
-  document.getElementById('carKm').value = 20;
-  document.getElementById('carValue').textContent = '20';
-  document.getElementById('carKm').style.setProperty('--pct', '20%');
-
-  document.getElementById('flights').value = 2;
-  document.getElementById('flightValue').textContent = '2';
-  document.getElementById('flights').style.setProperty('--pct', '10%');
-
-  document.getElementById('electricity').value = 150;
-  document.getElementById('electricityValue').textContent = '150';
-  document.getElementById('electricity').style.setProperty('--pct', '30%');
-
-  document.getElementById('diet').value = 'occasional-meat';
-
-  document.getElementById('resultContainer').classList.add('hidden');
+// ── Restart ───────────────────────────────────────────────────────
+function restart() {
+  currentStep = 0;
+  Object.assign(ans, {
+    carKm:0, carDays:0, electricity:0, diet:null,
+    clothes:null, electronics:null, recycle:null,
+    shower:null, waterSaving:null,
+    foodWaste:null, plastic:null, generalWaste:null
+  });
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById('progressWrap').classList.remove('hidden');
+  document.getElementById('stepDots').classList.remove('hidden');
+  renderStep();
+  updateLive();
 }
+
+// ── Init ──────────────────────────────────────────────────────────
+renderStep();
+updateLive();
 </script>
 </body>
 </html>
